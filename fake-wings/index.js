@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import expressWs from "express-ws";
+import jwt from "jsonwebtoken";
 
 const app = new express();
 expressWs(app);
@@ -18,6 +19,7 @@ app.use(cors());
 
 const panelURL = "http://192.168.228.128";
 const tokenId = "ad738EcLSoC4nvv1"; // config.yml token_id
+const token = "iow2cY6CrJKHzMWXmvOQgYEwjT2TTSEcXXU05fQtKIvE85eXk1dlkqM9jWchxsly"; // config.yml token (none of these tokens are valid. there are mere examples.)
 
 app.use((req, _res, next) => {
   if (req.originalUrl !== "/api/system") {
@@ -48,7 +50,7 @@ app.post('/api/update', (req, res) => {
 app.post('/api/servers', async (req, res) => {
   const request1 = await fetch(`${panelURL}/api/remote/servers/${req.body.uuid}`, {
     headers: {
-      authorization: `Bearer ${tokenId}.${req.headers.authorization.slice("Bearer ".length)}`, // config.yml token_id.token
+      authorization: `Bearer ${tokenId}.${token}`, // config.yml token_id.token
       accept: "application/vnd.pterodactyl.v1+json",
       "accept-encoding": "gzip"
     }
@@ -58,7 +60,7 @@ app.post('/api/servers', async (req, res) => {
   const request2 = await fetch(`${panelURL}/api/remote/servers/${req.body.uuid}/install`, {
     method: "post",
     headers: {
-      authorization: `Bearer ${tokenId}.${req.headers.authorization.slice("Bearer ".length)}`, // config.yml token_id.token
+      authorization: `Bearer ${tokenId}.${token}`, // config.yml token_id.token
       'content-type': 'application/json',
       accept: "application/json",
     },
@@ -98,23 +100,42 @@ app.ws("/api/servers/:uuid/ws", (ws, req) => {
   };
 });
 
-// app.post("/api/transfers", async (req, res) => {
-//   res.sendStatus(200);
-// });
+app.post("/api/transfers", async (req, res) => {
+  const { sub } = jwt.decode(req.headers.authorization.slice("Bearer ".length), { allowInvalidAsymmetricKeyTypes: true });
+  
+  const request = await fetch(`${panelURL}/api/remote/servers/${sub}/transfer/success`, {
+    method: "post",
+    headers: {
+      authorization: `Bearer ${tokenId}.${token}`, // config.yml token_id.token
+      accept: "application/vnd.pterodactyl.v1+json",
+      "accept-encoding": "gzip"
+    },
+  });
+  console.log("response", request.status);
 
-// app.post("/api/servers/:uuid/transfer", async (req, res) => {
-//   const request = await fetch(req.body.url, {
-//     method: "post",
-//     headers: {
-//       'transfer-encoding': 'chunked',
-//       authorization: req.body.token,
-//       'content-type': 'multipart/form-data; boundary=09c32253291161daf213b1113f5c7696fe8bb02b17859d957f6cb70fbf2a',
-//       'accept-encoding': 'gzip'
-//     }
-//   });
-//   console.log(await request.json());
+  res.sendStatus(200);
+});
 
-//   res.sendStatus(200);
-// });
+app.post("/api/servers/:uuid/transfer", async (req, res) => {
+  // Doesn't work.
+
+  // try {
+  //   const request = await fetch(req.body.url, {
+  //     method: "post",
+  //     headers: {
+  //       // 'transfer-encoding': 'chunked',
+  //       authorization: req.body.token,
+  //       'content-type': 'multipart/form-data; boundary=09c32253291161daf213b1113f5c7696fe8bb02b17859d957f6cb70fbf2a',
+  //       'accept-encoding': 'gzip'
+  //     }
+  //   });
+  //   console.log(await request.json());
+  // } catch(err) {
+  //   console.error(err);
+  //   return res.sendStatus(500);
+  // }
+
+  res.sendStatus(200);
+});
 
 app.listen(8080);
