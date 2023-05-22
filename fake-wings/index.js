@@ -1,7 +1,9 @@
 import cors from "cors";
 import express from "express";
+import expressWs from "express-ws";
 
 const app = new express();
+expressWs(app);
 
 app.use(express.json({
   inflate: true,
@@ -69,5 +71,50 @@ app.post('/api/servers', async (req, res) => {
 
   res.json({});
 });
+
+app.get("/api/servers/:uuid/files/list-directory", (req, res) => {
+  res.json([]);
+});
+
+app.ws("/api/servers/:uuid/ws", (ws, req) => {
+  ws.onmessage = msg => {
+    const data = JSON.parse(msg.data);
+    console.log("ws", data);
+
+    switch(data.event) {
+      case "auth":
+        ws.send(JSON.stringify({ event: "auth success" }));
+        break;
+      case "send logs":
+        ws.send(JSON.stringify({ event: "console output", args: ["hi lol"] }))
+        break;
+      case "send stats":
+        ws.send(JSON.stringify({ event: "status", args: ["offline"] }))
+        break;
+    }
+  };
+  ws.onclose = () => {
+    console.log("ws closed");
+  };
+});
+
+// app.post("/api/transfers", async (req, res) => {
+//   res.sendStatus(200);
+// });
+
+// app.post("/api/servers/:uuid/transfer", async (req, res) => {
+//   const request = await fetch(req.body.url, {
+//     method: "post",
+//     headers: {
+//       'transfer-encoding': 'chunked',
+//       authorization: req.body.token,
+//       'content-type': 'multipart/form-data; boundary=09c32253291161daf213b1113f5c7696fe8bb02b17859d957f6cb70fbf2a',
+//       'accept-encoding': 'gzip'
+//     }
+//   });
+//   console.log(await request.json());
+
+//   res.sendStatus(200);
+// });
 
 app.listen(8080);
