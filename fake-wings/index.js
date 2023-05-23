@@ -104,7 +104,7 @@ app.post("/api/transfers", async (req, res) => {
   const { sub } = jwt.decode(req.headers.authorization.slice("Bearer ".length), { allowInvalidAsymmetricKeyTypes: true });
   
   const request = await fetch(`${panelURL}/api/remote/servers/${sub}/transfer/success`, {
-    method: "post",
+    method: "post", // "get" does the same thing (why. who designed this api?)
     headers: {
       authorization: `Bearer ${tokenId}.${token}`, // config.yml token_id.token
       accept: "application/vnd.pterodactyl.v1+json",
