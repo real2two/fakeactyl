@@ -4,8 +4,7 @@ import fetch from "node-fetch";
 
 const app = new express();
 
-app.use(express.text());
-
+app.use(express.text({ type: "*/*" }));
 app.use(cors());
 
 const panelURL = "http://192.168.228.128";
@@ -30,21 +29,23 @@ app.use(async (req, res, next) => {
   delete headers['content-length'];
   headers.authorization = `Bearer ${wingsAuthorization}`;
 
-  const text = await (
-    await fetch(`${panelURL}${req.originalUrl}`, {
+  try {
+    const fetched = await fetch(`${panelURL}${req.originalUrl}`, {
       method: req.method,
       headers: headers,
       body: ["GET", "HEAD"].includes(req.method) ? undefined : req.body
-    })
-  ).text();
-
-  try {
-    const json = JSON.parse(text);
-    console.log("Response:", json);
-    return res.json(json);
+    });
+    const text = await fetched.text();
+    res.status(fetched.status).send(text);
+  
+    try {
+      const json = JSON.parse(text);
+      console.log("Response:", fetched.status, json);
+    } catch(err) {
+      console.log("Response:", fetched.status, text);
+    }
   } catch(err) {
-    console.log("Response:", text);
-    return res.send(text);
+    console.error(err);
   }
 
   // next();

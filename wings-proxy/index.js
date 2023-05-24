@@ -5,27 +5,24 @@ import express from "express";
 import expressWs from "express-ws";
 
 const app = new express();
-expressWs(app);
 
-app.use(express.json({
-  inflate: true,
-  limit: '500kb',
-  reviver: null,
-  strict: true,
-  type: 'application/json',
-  verify: undefined
-}));
-
+app.use(express.text({ type: "*/*" }));
 app.use(cors());
+
+expressWs(app);
 
 const wingsURL = "http://192.168.228.128:8080";
 const wingsAuthorization = "iow2cY6CrJKHzMWXmvOQgYEwjT2TTSEcXXU05fQtKIvE85eXk1dlkqM9jWchxsly"
 
-app.use(async (req, res, next) => {
+app.all("*", async (req, res) => {
   console.log('==============');
   console.log(`${req.method} ${wingsURL}${req.originalUrl}`);
   console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
+  try {
+    console.log('Body:', JSON.parse(req.body));
+  } catch(err) {
+    console.log('Body:', req.body);
+  }
 
   if (req.headers.connection === "Upgrade") {
     return res.sendStatus(500);
@@ -36,21 +33,19 @@ app.use(async (req, res, next) => {
   headers.authorization = `Bearer ${wingsAuthorization}`;
   
   try {
-    const text = await (
-      await fetch(`${wingsURL}${req.originalUrl}`, {
-        method: req.method,
-        headers,
-        body: ["GET", "HEAD"].includes(req.method) ? undefined : req.body
-      })
-    ).text();
-
-    res.send(text);
+    const fetched = await fetch(`${wingsURL}${req.originalUrl}`, {
+      method: req.method,
+      headers,
+      body: ["GET", "HEAD"].includes(req.method) ? undefined : req.body
+    });
+    const text = await fetched.text();
+    res.status(fetched.status).send(text);
 
     try {
       const json = JSON.parse(text);
-      console.log("Response:", json);
+      console.log("Response:", fetched.status, json);
     } catch(err) {
-      console.log("Response:", text);
+      console.log("Response:", fetched.status, text);
     }
   } catch(err) {
     console.error(err);
