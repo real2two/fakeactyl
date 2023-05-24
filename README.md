@@ -15,3 +15,7 @@ No support will be given, neither is this a project.
 ## How to setup Wings
 
 Make sure the "remote" in config.yml points to the proxied panel, and add a node to the PROXIED WINGS instead of the real one to the panel.
+
+Make sure to make the token and token_id the same value you use on the proxied panel.
+
+For allocations, set them as an allocation the actual Wings can use.
