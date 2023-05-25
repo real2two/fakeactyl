@@ -12,7 +12,9 @@ No support will be given, neither is this a project.
 
 "fake-wings" is a (wip) fake Wings instance, so I can see the response body the panel sends to Wings. You can add this as a "node", and it'll show online on the Nodes admin page.
 
-## How to setup Wings
+**The proxies aren't perfect!**
+
+## How to setup Wings proxy
 
 Make sure the "remote" in config.yml points to the proxied panel, and add a node to the PROXIED WINGS instead of the real one to the panel.
 
